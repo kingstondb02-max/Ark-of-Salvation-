@@ -283,6 +283,7 @@ footer .brand{color:var(--hero-fg)}
       <dl>
         <div><dt>Address</dt><dd>5 City Club Circle<br>Lexington, NC 27292<br><a href="https://www.google.com/maps/search/?api=1&amp;query=5+City+Club+Cir+Lexington+NC+27292" target="_blank" rel="noopener">Get directions</a></dd></div>
         <div><dt>Phone</dt><dd><a href="tel:+13367808489">336-780-8489</a></dd></div>
+        <div><dt>Email</dt><dd><a href="mailto:info@arkofsalvationchurch.org">info@arkofsalvationchurch.org</a></dd></div>
       </dl>
     </div>
     <form id="visitForm" novalidate>
@@ -303,7 +304,8 @@ footer .brand{color:var(--hero-fg)}
         </select>
       </label>
       <label for="fnote">Prayer request or question (optional)<textarea id="fnote" name="fnote" placeholder="Anything you'd like us to pray about or know?"></textarea></label>
-      <button class="btn btn-primary" type="submit" style="justify-self:start">Let us know you're coming</button>
+      <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn btn-primary" type="submit" id="fsubmit" style="justify-self:start">Let us know you're coming</button>
       <p class="ok" id="ok" role="status" hidden></p>
     </form>
   </div>
@@ -313,19 +315,41 @@ footer .brand{color:var(--hero-fg)}
 <footer>
   <div class="wrap">
     <span class="brand">Ark of Salvation Apostolic Church of God</span>
-    <span>5 City Club Circle, Lexington, NC 27292 &nbsp;|&nbsp; Sunday worship 12:00 PM &nbsp;|&nbsp; 336-780-8489</span>
+    <span>5 City Club Circle, Lexington, NC 27292 &nbsp;|&nbsp; Sunday worship 12:00 PM &nbsp;|&nbsp; 336-780-8489 &nbsp;|&nbsp; <a href="mailto:info@arkofsalvationchurch.org">info@arkofsalvationchurch.org</a></span>
   </div>
 </footer>
 
 <script>
 document.getElementById('visitForm').addEventListener('submit', function(e){
   e.preventDefault();
+  var form = e.target;
   var name = document.getElementById('fname').value.trim();
   var ok = document.getElementById('ok');
+  var btn = document.getElementById('fsubmit');
   if(!name){ ok.textContent = 'Please enter your name so we know who to look for.'; ok.hidden = false; document.getElementById('fname').focus(); return; }
+  if(form._honey.value){ return; }
   var svc = document.getElementById('fservice').value;
-  ok.textContent = 'Thank you, ' + name + '! We look forward to seeing you at ' + svc + '.';
-  ok.hidden = false;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  fetch('https://formsubmit.co/ajax/info@arkofsalvationchurch.org', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+    body: JSON.stringify({
+      _subject: 'Planning to visit: ' + name,
+      _template: 'table',
+      Name: name,
+      'Phone or email': document.getElementById('fphone').value.trim(),
+      Service: svc,
+      'Prayer request or question': document.getElementById('fnote').value.trim()
+    })
+  }).then(function(r){
+    if(!r.ok) throw new Error();
+    ok.textContent = 'Thank you, ' + name + '! We look forward to seeing you at ' + svc + '.';
+    form.reset();
+  }).catch(function(){
+    ok.textContent = "Sorry, your message didn't go through. Please call us at 336-780-8489.";
+  }).then(function(){
+    ok.hidden = false; btn.disabled = false; btn.textContent = "Let us know you're coming";
+  });
 });
 </script>
 </body>
